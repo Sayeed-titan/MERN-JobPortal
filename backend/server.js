@@ -2,7 +2,10 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+
 const authRoutes = require("./routes/authRoutes");
+import jobRoutes from "./routes/jobRoutes.js";
+
 require("dotenv").config();
 
 const app = express();
@@ -10,7 +13,11 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Endpoints
 app.use("/api/auth", authRoutes);
+app.use("/api/jobs", jobRoutes);
+
 
 // Simple Test Route
 app.get("/api/health", (req, res) => {
