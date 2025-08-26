@@ -1,6 +1,13 @@
-import express from "express";
-import { createJob, getJobs, applyJob } from "../controllers/jobController.js";
-import { protect } from "../middleware/authMiddleware.js";
+const express = require("express");
+
+const {
+  createJob,
+  getJobs,
+  applyJob,
+} = require("../controllers/jobController.js");
+
+const {getJobApplications, deleteJob} = require("../controllers/jobController.js")
+const { protect, adminOnly } = require("../middleware/authMiddleware.js");
 
 const router = express.Router();
 
@@ -13,4 +20,10 @@ router.get("/", getJobs);
 // Candidate applies to a job
 router.post("/:id/apply", protect, applyJob);
 
-export default router;
+// Admin: see all applicants for a job
+router.get("/:id/applications", protect, adminOnly, getJobApplications);
+
+// Admin: delete a job
+router.delete("/:id", protect, adminOnly, deleteJob);
+
+module.exports = router;

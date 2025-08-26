@@ -4,7 +4,11 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 
 const authRoutes = require("./routes/authRoutes");
-import jobRoutes from "./routes/jobRoutes.js";
+const jobRoutes = require ("./routes/jobRoutes.js");
+const scalar = require("@scalar/express-api-reference");
+const apiReference = scalar.apiReference;
+const path = require("path");
+const fs = require("fs");
 
 require("dotenv").config();
 
@@ -18,6 +22,40 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);
 
+// Load OpenAPI spec from file
+const openapiSpec = JSON.parse(fs.readFileSync(path.join(__dirname, "openapi.json"), "utf-8"));
+
+// Scalar API Docs
+// app.use("/docs", apiReference({
+//   theme: "saturn",   // themes: default, saturn, alternate...
+//   spec: {
+//     content: {
+//       openapi: "3.0.0",
+//       info: {
+//         title: "MERN Job Portal API",
+//         version: "1.0.0",
+//         description: "Interactive API documentation for the Job Portal project"
+//       },
+//       servers: [
+//         { url: "http://localhost:5000/api" }
+//       ],
+//       components: {
+//         securitySchemes: {
+//           bearerAuth: {
+//             type: "http",
+//             scheme: "bearer",
+//             bearerFormat: "JWT",
+//           },
+//         },
+//       },
+//       security: [{ bearerAuth: [] }],
+//     },
+//   },
+// }));
+app.use("/docs", apiReference({
+  theme: "saturn",
+  spec: { content: openapiSpec },
+}));
 
 // Simple Test Route
 app.get("/api/health", (req, res) => {

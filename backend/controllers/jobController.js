@@ -1,7 +1,7 @@
-import Job from "../models/Job.js";
+const Job = require("../models/Job.js");
 
 // Create job (Employer)
-export const createJob = async (req, res) => {
+const createJob = async (req, res) => {
   try {
     const job = new Job({ ...req.body, postedBy: req.user._id });
     await job.save();
@@ -12,7 +12,7 @@ export const createJob = async (req, res) => {
 };
 
 // Get all jobs
-export const getJobs = async (req, res) => {
+const getJobs = async (req, res) => {
   try {
     const jobs = await Job.find().populate("postedBy", "name email");
     res.json(jobs);
@@ -22,7 +22,7 @@ export const getJobs = async (req, res) => {
 };
 
 // Apply to a job
-export const applyJob = async (req, res) => {
+const applyJob = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
     if (!job) return res.status(404).json({ message: "Job not found" });
@@ -37,4 +37,39 @@ export const applyJob = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
+};
+
+// Admin: Get all applications for a job
+const getJobApplications = async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id)
+      .populate("applicants", "name email skills role");
+
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
+    res.json(job.applicants);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Admin: Delete job
+const deleteJob = async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
+    await job.deleteOne();
+    res.json({ message: "Job deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+module.exports = {
+  createJob,
+  getJobs,
+  applyJob,
+  getJobApplications,
+  deleteJob
 };
