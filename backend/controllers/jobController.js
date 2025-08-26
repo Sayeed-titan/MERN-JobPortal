@@ -1,5 +1,7 @@
 const Job = require("../models/Job.js");
 const Notification = require("../models/Notification");
+const User = require("../models/User");
+
 
 
 // Create job (Employer)
@@ -94,16 +96,19 @@ const applyJob = async (req, res) => {
 };
 
 // Admin: Get all applications for a job
-const getJobApplications = async (req, res) => {
+const getJobApplicants = async (req, res) => {
   try {
-    const job = await Job.findById(req.params.id)
-      .populate("applicants", "name email skills role");
-
+    const job = await Job.findById(req.params.id).populate("applicants", "name email skills cv education experience");
     if (!job) return res.status(404).json({ message: "Job not found" });
 
+    // Ensure only the employer who posted the job can see applicants
+    if (job.postedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     res.json(job.applicants);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -124,6 +129,6 @@ module.exports = {
   createJob,
   getJobs,
   applyJob,
-  getJobApplications,
+  getJobApplicants ,
   deleteJob
 };

@@ -20,8 +20,8 @@ router.get("/", getJobs);
 // Candidate applies to a job
 router.post("/:id/apply", protect, applyJob);
 
-// Admin: see all applicants for a job
-router.get("/:id/applications", protect, isAdmin, getJobApplications);
+// Get all applicants for a job (employer only)
+router.get("/:id/applicants", protect, isEmployer, getJobApplicants);
 
 // Admin: delete a job
 router.delete("/:id", protect, isAdmin, deleteJob);
