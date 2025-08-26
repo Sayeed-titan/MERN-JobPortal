@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Box, Typography, Card, CardContent, Button, Stack } from "@mui/material";
 import axiosInstance from "../api/axiosInstance";
+import ApplicantsModal from "../components/ApplicantsModal"; // <-- import here
 
 const ManageJobs = () => {
   const [jobs, setJobs] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);       // <-- modal state
+  const [selectedJobId, setSelectedJobId] = useState(null);
 
   const fetchJobs = async () => {
     try {
-      const { data } = await axiosInstance.get("/jobs/my"); // your backend should filter jobs by logged-in employer
+      const { data } = await axiosInstance.get("/jobs/my"); 
       setJobs(data);
     } catch (err) {
       console.error(err);
@@ -19,8 +22,8 @@ const ManageJobs = () => {
   }, []);
 
   const viewApplicants = (jobId) => {
-    // redirect to job applications page or open modal
-    alert(`View applicants for job: ${jobId}`);
+    setSelectedJobId(jobId);
+    setModalOpen(true); // open modal
   };
 
   const deleteJob = async (jobId) => {
@@ -54,6 +57,13 @@ const ManageJobs = () => {
           ))
         )}
       </Stack>
+
+      {/* Applicants Modal */}
+      <ApplicantsModal 
+        open={modalOpen} 
+        onClose={() => setModalOpen(false)} 
+        jobId={selectedJobId} 
+      />
     </Box>
   );
 };
