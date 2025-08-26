@@ -1,4 +1,6 @@
 const Job = require("../models/Job.js");
+const Notification = require("../models/Notification");
+
 
 // Create job (Employer)
 const createJob = async (req, res) => {
@@ -77,9 +79,17 @@ const applyJob = async (req, res) => {
 
     job.applicants.push(req.user._id);
     await job.save();
+
+    // Trigger notification for employer
+    await Notification.create({
+      user: job.postedBy,     // employer ID
+      type: "application",
+      referenceId: job._id
+    });
+
     res.json({ message: "Applied successfully", job });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
