@@ -13,6 +13,8 @@ const jobSchema = new mongoose.Schema(
       default: "Full-time",
     },
     skillsRequired: [{ type: String }],
+    experienceRequired: String, // e.g., "2-5 years"
+    educationRequired: String,  // e.g., "Bachelor's in CS"
     postedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     applicants: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   },
