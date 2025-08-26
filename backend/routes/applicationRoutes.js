@@ -20,4 +20,16 @@ router.get("/", protect, isAdmin, getAllApplications);
 // Employer/Admin updates status
 router.put("/:id/status", protect, isEmployer, updateApplicationStatus);
 
+// GET /api/applications/my
+router.get("/my", authMiddleware, async (req, res) => {
+  try {
+    const applications = await Application.find({ applicant: req.user.id })
+      .populate("job", "title companyName location description")
+      .sort("-createdAt");
+    res.json(applications);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;

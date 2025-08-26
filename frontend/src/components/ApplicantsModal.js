@@ -15,29 +15,6 @@ const style = {
   overflowY: "auto"
 };
 
-const handleStatusChange = async (applicantId, status) => {
-  try {
-    // ✅ Optimistic UI update
-    setApplicants((prev) =>
-      prev.map((a) =>
-        a._id === applicantId ? { ...a, status } : a
-      )
-    );
-
-    // ✅ Call backend to persist status
-    await axios.put(`/api/applications/${applicantId}/status`, { status });
-  } catch (error) {
-    console.error("Failed to update status:", error);
-    // ❌ Rollback if request fails
-    setApplicants((prev) =>
-      prev.map((a) =>
-        a._id === applicantId ? { ...a, status: a.status || "pending" } : a
-      )
-    );
-  }
-};
-;
-
 const ApplicantsModal = ({ open, onClose, jobId }) => {
   const [applicants, setApplicants] = useState([]);
 
@@ -54,7 +31,30 @@ const ApplicantsModal = ({ open, onClose, jobId }) => {
     if (open) fetchApplicants();
   }, [open]);
 
-return (
+  // ✅ Now inside component (has access to setApplicants)
+  const handleStatusChange = async (applicantId, status) => {
+    try {
+      // Optimistic update
+      setApplicants((prev) =>
+        prev.map((a) =>
+          a._id === applicantId ? { ...a, status } : a
+        )
+      );
+
+      // Persist to backend
+      await axiosInstance.put(`/applications/${applicantId}/status`, { status });
+    } catch (error) {
+      console.error("Failed to update status:", error);
+      // Rollback on failure
+      setApplicants((prev) =>
+        prev.map((a) =>
+          a._id === applicantId ? { ...a, status: a.status || "pending" } : a
+        )
+      );
+    }
+  };
+
+  return (
     <Modal open={open} onClose={onClose}>
       <Box sx={style}>
         <Typography variant="h6" mb={2}>Applicants</Typography>
@@ -125,8 +125,6 @@ return (
       </Box>
     </Modal>
   );
-
-
 };
 
 export default ApplicantsModal;
