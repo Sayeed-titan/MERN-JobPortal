@@ -7,7 +7,7 @@ const {
 } = require("../controllers/jobController.js");
 
 const {getJobApplications, deleteJob} = require("../controllers/jobController.js")
-const { protect, adminOnly } = require("../middleware/authMiddleware.js");
+const { protect, isAdmin } = require("../middleware/authMiddleware.js");
 
 const router = express.Router();
 
@@ -21,9 +21,9 @@ router.get("/", getJobs);
 router.post("/:id/apply", protect, applyJob);
 
 // Admin: see all applicants for a job
-router.get("/:id/applications", protect, adminOnly, getJobApplications);
+router.get("/:id/applications", protect, isAdmin, getJobApplications);
 
 // Admin: delete a job
-router.delete("/:id", protect, adminOnly, deleteJob);
+router.delete("/:id", protect, isAdmin, deleteJob);
 
 module.exports = router;

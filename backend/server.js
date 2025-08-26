@@ -5,6 +5,11 @@ const cors = require("cors");
 
 const authRoutes = require("./routes/authRoutes");
 const jobRoutes = require ("./routes/jobRoutes.js");
+const applicationRoutes = require("./routes/applicationRoutes");
+const messageRoutes = require("./routes/messageRoutes");
+
+
+// Api tester Scalar
 const scalar = require("@scalar/express-api-reference");
 const apiReference = scalar.apiReference;
 const path = require("path");
@@ -21,6 +26,9 @@ app.use(express.json());
 // Endpoints
 app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);
+app.use("/api/applications", applicationRoutes);
+app.use("/api/messages", messageRoutes);
+
 
 // Load OpenAPI spec from file
 const openapiSpec = JSON.parse(fs.readFileSync(path.join(__dirname, "openapi.json"), "utf-8"));

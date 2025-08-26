@@ -14,10 +14,54 @@ const createJob = async (req, res) => {
 // Get all jobs
 const getJobs = async (req, res) => {
   try {
-    const jobs = await Job.find().populate("postedBy", "name email");
-    res.json(jobs);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    let { page = 1, limit = 10, skills, location, jobType, experience, education, search, sort } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    const query = {};
+
+    // Skills filter
+    if (skills) {
+      const skillsArray = skills.split(",");
+      query.skillsRequired = { $all: skillsArray };
+    }
+
+    // Location filter
+    if (location) query["location.division"] = location;
+
+    // Job type filter
+    if (jobType) query.jobType = jobType;
+
+    // Experience filter
+    if (experience) query.experienceRequired = { $regex: experience, $options: "i" };
+
+    // Education filter
+    if (education) query.educationRequired = { $regex: education, $options: "i" };
+
+    // Keyword search
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Pagination
+    const total = await Job.countDocuments(query);
+    const jobs = await Job.find(query)
+      .populate("postedBy", "name email companyName")
+      .sort(sort ? sort : "-createdAt")
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    res.json({
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      jobs
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
