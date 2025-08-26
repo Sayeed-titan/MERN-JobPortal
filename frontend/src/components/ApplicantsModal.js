@@ -15,6 +15,29 @@ const style = {
   overflowY: "auto"
 };
 
+const handleStatusChange = async (applicantId, status) => {
+  try {
+    // ✅ Optimistic UI update
+    setApplicants((prev) =>
+      prev.map((a) =>
+        a._id === applicantId ? { ...a, status } : a
+      )
+    );
+
+    // ✅ Call backend to persist status
+    await axios.put(`/api/applications/${applicantId}/status`, { status });
+  } catch (error) {
+    console.error("Failed to update status:", error);
+    // ❌ Rollback if request fails
+    setApplicants((prev) =>
+      prev.map((a) =>
+        a._id === applicantId ? { ...a, status: a.status || "pending" } : a
+      )
+    );
+  }
+};
+;
+
 const ApplicantsModal = ({ open, onClose, jobId }) => {
   const [applicants, setApplicants] = useState([]);
 
@@ -31,7 +54,7 @@ const ApplicantsModal = ({ open, onClose, jobId }) => {
     if (open) fetchApplicants();
   }, [open]);
 
-  return (
+return (
     <Modal open={open} onClose={onClose}>
       <Box sx={style}>
         <Typography variant="h6" mb={2}>Applicants</Typography>
@@ -44,11 +67,57 @@ const ApplicantsModal = ({ open, onClose, jobId }) => {
                 <Typography variant="subtitle1">{applicant.name}</Typography>
                 <Typography variant="body2">Email: {applicant.email}</Typography>
                 <Typography variant="body2">Skills: {applicant.skills.join(", ")}</Typography>
+
                 {applicant.cv && (
-                  <Button href={applicant.cv} target="_blank" variant="outlined" size="small" sx={{ mt: 1 }}>
+                  <Button
+                    href={applicant.cv}
+                    target="_blank"
+                    variant="outlined"
+                    size="small"
+                    sx={{ mt: 1, mr: 1 }}
+                  >
                     View CV
                   </Button>
                 )}
+
+                {/* ✅ Instant Status */}
+                <Typography
+                  variant="body2"
+                  sx={{
+                    mt: 1,
+                    fontWeight: "bold",
+                    color:
+                      applicant.status === "shortlisted"
+                        ? "green"
+                        : applicant.status === "rejected"
+                        ? "red"
+                        : "grey",
+                  }}
+                >
+                  Status: {applicant.status || "pending"}
+                </Typography>
+
+                {/* ✅ Instant Buttons */}
+                <Stack direction="row" spacing={1} mt={1}>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    size="small"
+                    disabled={applicant.status === "shortlisted"}
+                    onClick={() => handleStatusChange(applicant._id, "shortlisted")}
+                  >
+                    Shortlist
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="error"
+                    size="small"
+                    disabled={applicant.status === "rejected"}
+                    onClick={() => handleStatusChange(applicant._id, "rejected")}
+                  >
+                    Reject
+                  </Button>
+                </Stack>
               </Paper>
             ))
           )}
@@ -56,6 +125,8 @@ const ApplicantsModal = ({ open, onClose, jobId }) => {
       </Box>
     </Modal>
   );
+
+
 };
 
 export default ApplicantsModal;
