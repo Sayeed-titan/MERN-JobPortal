@@ -21,7 +21,7 @@ router.get("/", protect, isAdmin, getAllApplications);
 router.put("/:id/status", protect, isEmployer, updateApplicationStatus);
 
 // GET /api/applications/my
-router.get("/my", authMiddleware, async (req, res) => {
+router.get("/my", protect, async (req, res) => {
   try {
     const applications = await Application.find({ applicant: req.user.id })
       .populate("job", "title companyName location description")

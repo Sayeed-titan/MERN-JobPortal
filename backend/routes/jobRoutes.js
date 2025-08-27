@@ -6,8 +6,8 @@ const {
   applyJob,
 } = require("../controllers/jobController.js");
 
-const {getJobApplications, deleteJob} = require("../controllers/jobController.js")
-const { protect, isAdmin } = require("../middleware/authMiddleware.js");
+const {getJobApplicants, updateApplicantStatus, deleteJob} = require("../controllers/jobController.js")
+const { protect, isAdmin, isEmployer } = require("../middleware/authMiddleware.js");
 
 const router = express.Router();
 

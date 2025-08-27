@@ -123,7 +123,8 @@ const deleteJob = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}
+};
+
 // Update applicant status (shortlist/reject)
 const updateApplicantStatus = async (req, res) => {
   try {
