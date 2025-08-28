@@ -7,6 +7,8 @@ import PostJob from "./pages/PostJob";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import JobDetails from "./pages/JobDetails";
+
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/jobs/:id" element={<JobDetails />} />
+
       </Routes>
     </Router>
   );

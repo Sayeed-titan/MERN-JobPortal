@@ -12,15 +12,18 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const { data } = await axiosInstance.post("/auth/login", {
-        email,
-        password,
-      });
+    setError("");
 
-      login(data.token); // store in context
+    if (!email || !password) {
+      setError("All fields are required");
+      return;
+    }
+
+    try {
+      const { data } = await axiosInstance.post("/auth/login", { email, password });
+      login(data.token); // store token & fetch profile
       navigate("/profile");
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
