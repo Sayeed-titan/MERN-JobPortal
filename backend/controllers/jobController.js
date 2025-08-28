@@ -15,6 +15,19 @@ const createJob = async (req, res) => {
   }
 };
 
+// Get all my job posted my Employer
+const getMyJobs = async (req, res) => {
+  try {
+    if (req.user.role !== "employer") {
+      return res.status(403).json({ message: "Only employers can view their posted jobs" });
+    }
+    const jobs = await Job.find({ postedBy: req.user.id });
+    res.json(jobs);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Get all jobs
 const getJobs = async (req, res) => {
   try {
@@ -69,6 +82,49 @@ const getJobs = async (req, res) => {
   }
 };
 
+// Update a job (only employer who created it)
+const updateJob = async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ message: "Job not found" });
+
+    // Only the poster can update
+    if (job.postedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to update this job" });
+    }
+
+    // Destructure fields from request body
+    const {
+      title,
+      description,
+      company,
+      salary,
+      jobType,
+      skillsRequired,
+      experienceRequired,
+      educationRequired,
+      location
+    } = req.body;
+
+    // Update fields if provided
+    job.title = title || job.title;
+    job.description = description || job.description;
+    job.company = company || job.company;
+    job.salary = salary !== undefined ? salary : job.salary;
+    job.jobType = jobType || job.jobType;
+    job.skillsRequired = skillsRequired || job.skillsRequired;
+    job.experienceRequired = experienceRequired || job.experienceRequired;
+    job.educationRequired = educationRequired || job.educationRequired;
+    job.location = location || job.location;
+
+    await job.save();
+    res.json(job);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 // Apply to a job
 const applyJob = async (req, res) => {
   try {
@@ -112,11 +168,16 @@ const getJobApplicants = async (req, res) => {
   }
 };
 
-// Admin: Delete job
+// Employer: Delete job
+// Delete a job
 const deleteJob = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
     if (!job) return res.status(404).json({ message: "Job not found" });
+
+    if (job.postedBy.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized to delete this job" });
+    }
 
     await job.deleteOne();
     res.json({ message: "Job deleted successfully" });
@@ -147,11 +208,15 @@ const updateApplicantStatus = async (req, res) => {
   }
 };
 
+
+
 module.exports = {
   createJob,
+  getMyJobs,
+  updateJob,
+  deleteJob,
   getJobs,
   applyJob,
   getJobApplicants ,
-  deleteJob,
   updateApplicantStatus
 };
