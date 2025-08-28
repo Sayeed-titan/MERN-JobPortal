@@ -41,4 +41,13 @@ const isEmployer = (req, res, next) => {
   }
 };
 
-module.exports = { protect, isAdmin, isEmployer };
+// Candidate access middleware
+const isCandidate = (req, res, next) => {
+  if (req.user && req.user.role === "candidate") {
+    next();
+  } else {
+    res.status(403).json({ message: "Candidate access only" });
+  }
+};
+
+module.exports = { protect, isAdmin, isEmployer, isCandidate };

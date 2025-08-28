@@ -1,5 +1,14 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Box, Typography, Button, Stack, TextField, Card, CardContent } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Button,
+  Stack,
+  TextField,
+  Card,
+  CardContent,
+  Divider,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
 import { AuthContext } from "../context/AuthContext";
@@ -15,7 +24,8 @@ const Profile = () => {
     const fetchUserJobs = async () => {
       if (!user) return;
       try {
-        const endpoint = user.role === "employer" ? "/jobs/my" : "/applications/my";
+        const endpoint =
+          user.role === "employer" ? "/jobs/my" : "/applications/my";
         const { data } = await axiosInstance.get(endpoint);
         setJobs(data);
       } catch (err) {
@@ -45,7 +55,7 @@ const Profile = () => {
     }
   };
 
-  // Delete job
+  // Delete job (employer only)
   const handleDeleteJob = async (id) => {
     if (!window.confirm("Are you sure you want to delete this job?")) return;
     try {
@@ -67,43 +77,67 @@ const Profile = () => {
 
   return (
     <Box p={4}>
-      <Typography variant="h4" mb={2}>Profile</Typography>
+      {/* Profile Header */}
+      <Typography variant="h4" fontWeight="bold" gutterBottom>
+        Profile
+      </Typography>
 
       {/* User Info */}
-      <Box mb={4}>
-        <Stack spacing={2} direction="row" alignItems="center">
-          <TextField
-            label="Name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            disabled={!editing}
-          />
-          <TextField
-            label="Email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            disabled={!editing}
-          />
-          {editing ? (
-            <Button variant="contained" color="primary" onClick={handleSave}>Save</Button>
-          ) : (
-            <Button variant="outlined" onClick={handleEditToggle}>Edit</Button>
-          )}
-          <Button variant="outlined" color="error" onClick={logout}>Logout</Button>
-        </Stack>
-        <Typography mt={1}>Role: {user.role}</Typography>
-      </Box>
+      <Card sx={{ mb: 4, p: 2 }}>
+        <CardContent>
+          <Stack spacing={2} direction="row" alignItems="center">
+            <TextField
+              label="Name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              disabled={!editing}
+            />
+            <TextField
+              label="Email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              disabled={!editing}
+            />
+            {editing ? (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleSave}
+              >
+                Save
+              </Button>
+            ) : (
+              <Button variant="outlined" onClick={handleEditToggle}>
+                Edit
+              </Button>
+            )}
+            <Button variant="outlined" color="error" onClick={logout}>
+              Logout
+            </Button>
+          </Stack>
+          <Typography mt={2}>Role: {user.role}</Typography>
+        </CardContent>
+      </Card>
 
-      {/* User Jobs */}
+      {/* Jobs Section */}
       <Box>
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography variant="h5" mb={2}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={2}
+        >
+          <Typography variant="h5" fontWeight="bold">
             {user.role === "employer" ? "Posted Jobs" : "Applied Jobs"}
           </Typography>
+
           {user.role === "employer" && (
-            <Button variant="contained" onClick={() => navigate("/post-job")}>
+            <Button
+              variant="contained"
+              onClick={() => navigate("/post-job")}
+            >
               Post New Job
             </Button>
           )}
@@ -111,38 +145,72 @@ const Profile = () => {
 
         <Stack spacing={2}>
           {jobs.length === 0 ? (
-            <Typography>No jobs found.</Typography>
-          ) : (
+            <Typography color="text.secondary">No jobs found.</Typography>
+          ) : user.role === "employer" ? (
+            // Employer Jobs
             jobs.map((job) => (
               <Card key={job._id}>
                 <CardContent>
-                  <Typography variant="h6">{job.title || job.job?.title}</Typography>
-                  <Typography variant="body2">
-                    {job.description || job.job?.description}
+                  <Typography variant="h6">{job.title}</Typography>
+                  <Typography variant="body2" color="text.secondary" mb={1}>
+                    {job.description}
                   </Typography>
-                  {user.role === "candidate" && job.status && (
-                    <Typography>Status: {job.status}</Typography>
-                  )}
-
-                  {/* Employer buttons */}
-                  {user.role === "employer" && (
-                    <Stack direction="row" spacing={1} mt={1}>
-                      <Button
-                        variant="outlined"
-                        color="primary"
-                        onClick={() => handleEditJob(job)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={() => handleDeleteJob(job._id)}
-                      >
-                        Delete
-                      </Button>
-                    </Stack>
-                  )}
+                  <Typography variant="body2">
+                    Location: {job.location?.district || job.location?.country}
+                  </Typography>
+                  <Typography variant="body2">Salary: {job.salary}</Typography>
+                  <Divider sx={{ my: 1 }} />
+                  <Stack direction="row" spacing={1}>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={() => handleEditJob(job)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      onClick={() => handleDeleteJob(job._id)}
+                    >
+                      Delete
+                    </Button>
+                  </Stack>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            // Candidate Applied Jobs
+            jobs.map((app) => (
+              <Card key={app._id}>
+                <CardContent>
+                  <Typography variant="h6">
+                    {app.jobId?.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" mb={1}>
+                    {app.jobId?.description}
+                  </Typography>
+                  <Typography variant="body2">
+                    Company: {app.jobId?.company}
+                  </Typography>
+                  <Typography variant="body2">
+                    Location:{" "}
+                    {app.jobId?.location?.district ||
+                      app.jobId?.location?.country}
+                  </Typography>
+                  <Typography variant="body2">
+                    Job Type: {app.jobId?.jobType}
+                  </Typography>
+                  <Typography variant="body2">
+                    Salary: {app.jobId?.salary}
+                  </Typography>
+                  <Typography variant="body2">
+                    Applied on:{" "}
+                    {new Date(app.appliedAt).toLocaleDateString()}
+                  </Typography>
+                  <Typography variant="body2">
+                    Status: {app.status}
+                  </Typography>
                 </CardContent>
               </Card>
             ))

@@ -1,15 +1,20 @@
 const express = require("express");
 const router = express.Router();
-const { protect, isEmployer, isAdmin } = require("../middleware/authMiddleware");
+const Application = require("../models/Application");
+const { protect, isEmployer, isAdmin, isCandidate } = require("../middleware/authMiddleware");
 const {
   applyToJob,
   getApplicationsByJob,
   getAllApplications,
-  updateApplicationStatus
+  updateApplicationStatus,
+  getMyApplications
 } = require("../controllers/applicationController");
 
 // Candidate applies
-router.post("/", protect, applyToJob);
+router.post("/:id/apply", protect, isCandidate, applyToJob);
+
+// Candidate views their applications
+router.get("/my", protect, isCandidate, getMyApplications);
 
 // Employer views applications for their job
 router.get("/job/:jobId", protect, isEmployer, getApplicationsByJob);
@@ -19,17 +24,5 @@ router.get("/", protect, isAdmin, getAllApplications);
 
 // Employer/Admin updates status
 router.put("/:id/status", protect, isEmployer, updateApplicationStatus);
-
-// GET /api/applications/my
-router.get("/my", protect, async (req, res) => {
-  try {
-    const applications = await Application.find({ applicant: req.user.id })
-      .populate("job", "title companyName location description")
-      .sort("-createdAt");
-    res.json(applications);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
 
 module.exports = router;

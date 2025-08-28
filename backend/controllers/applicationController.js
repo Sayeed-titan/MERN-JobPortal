@@ -4,27 +4,33 @@ const Job = require("../models/Job");
 // Candidate applies to a job
 exports.applyToJob = async (req, res) => {
   try {
-    const { jobId, coverLetter } = req.body;
+    if (req.user.role !== "candidate") {
+      return res.status(403).json({ message: "Only candidates can apply for jobs" });
+    }
 
-    // Check if already applied
-    const existing = await Application.findOne({ jobId, candidateId: req.user._id });
-    if (existing) return res.status(400).json({ message: "Already applied" });
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ message: "Job not found" });
 
-    const application = new Application({
-      jobId,
-      candidateId: req.user._id,
-      coverLetter
+    // Prevent duplicate applications
+    const existingApp = await Application.findOne({ jobId: job._id, candidateId: req.user._id });
+    if (existingApp) return res.status(400).json({ message: "You have already applied for this job" });
+
+    // Create application document
+    const application = await Application.create({
+      jobId: job._id,
+      candidateId: req.user._id
     });
-    await application.save();
 
-    // Add to job applicants
-    await Job.findByIdAndUpdate(jobId, { $push: { applicants: req.user._id } });
+    // Optional: also keep it in job.applicants array
+    job.applicants.push(req.user._id);
+    await job.save();
 
-    res.status(201).json({ message: "Applied successfully", application });
+    res.status(201).json({ message: "Applied successfully!", application });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 // Employer or Admin: get applications for a job
 exports.getApplicationsByJob = async (req, res) => {
@@ -60,5 +66,21 @@ exports.updateApplicationStatus = async (req, res) => {
     res.json(app);
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+exports.getMyApplications = async (req, res) => {
+  try {
+    const applications = await Application.find({ candidateId: req.user._id })
+      .populate({
+        path: "jobId",
+        select: "title description company location jobType skillsRequired salary"
+      })
+      .sort({ createdAt: -1 });
+
+    res.json(applications);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
