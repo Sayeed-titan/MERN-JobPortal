@@ -79,7 +79,8 @@ const Profile = () => {
     <Box p={4}>
       {/* Profile Header */}
       <Typography variant="h4" fontWeight="bold" gutterBottom>
-        Profile
+        {user.role === "employer" ? "Employer's Profile" : "Candidate's Profile" } 
+        
       </Typography>
 
       {/* User Info */}
@@ -113,9 +114,7 @@ const Profile = () => {
                 Edit
               </Button>
             )}
-            <Button variant="outlined" color="error" onClick={logout}>
-              Logout
-            </Button>
+
           </Stack>
           <Typography mt={2}>Role: {user.role}</Typography>
         </CardContent>

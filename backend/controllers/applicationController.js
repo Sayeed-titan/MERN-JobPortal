@@ -1,36 +1,54 @@
 const Application = require("../models/Application");
 const Job = require("../models/Job");
+const Notification = require("../models/Notification");
+
 
 // Candidate applies to a job
 exports.applyToJob = async (req, res) => {
   try {
+    // Only candidates can apply
     if (req.user.role !== "candidate") {
       return res.status(403).json({ message: "Only candidates can apply for jobs" });
     }
 
+    // Find the job by ID
     const job = await Job.findById(req.params.id);
     if (!job) return res.status(404).json({ message: "Job not found" });
 
-    // Prevent duplicate applications
-    const existingApp = await Application.findOne({ jobId: job._id, candidateId: req.user._id });
-    if (existingApp) return res.status(400).json({ message: "You have already applied for this job" });
+    // Check if candidate has already applied
+    const existingApp = await Application.findOne({
+      jobId: job._id,
+      candidateId: req.user._id,
+    });
+    if (existingApp)
+      return res.status(400).json({ message: "You have already applied for this job" });
 
-    // Create application document
+    // Create new application
     const application = await Application.create({
       jobId: job._id,
-      candidateId: req.user._id
+      candidateId: req.user._id,
     });
 
-    // Optional: also keep it in job.applicants array
-    job.applicants.push(req.user._id);
-    await job.save();
+    // Create notification for employer (postedBy)
+    if (job.postedBy) {
+      await Notification.create({
+        userId: job.postedBy, // this now matches your Job schema
+        type: "APPLICATION_RECEIVED",
+        message: `${req.user.name} has applied for your job: ${job.title}`,
+        jobId: job._id,
+        referenceId: application._id,
+        isRead: false,
+      });
+    } else {
+      console.warn("Job has no postedBy user. Skipping notification.");
+    }
 
-    res.status(201).json({ message: "Applied successfully!", application });
+    res.status(201).json({ message: "Applied successfully", application });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Error in applyToJob:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
-
 
 // Employer or Admin: get applications for a job
 exports.getApplicationsByJob = async (req, res) => {

@@ -66,7 +66,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-export default function PrimarySearchAppBar() {
+export default function Navbar() {
   const navigate = useNavigate();
   const { user, logout } = useContext(AuthContext);
 
@@ -87,7 +87,8 @@ export default function PrimarySearchAppBar() {
     setAnchorEl(null);
     handleMobileMenuClose();
   };
-  const handleMobileMenuOpen = (event) => setMobileMoreAnchorEl(event.currentTarget);
+  const handleMobileMenuOpen = (event) =>
+    setMobileMoreAnchorEl(event.currentTarget);
 
   const go = (path) => {
     navigate(path);
@@ -116,20 +117,18 @@ export default function PrimarySearchAppBar() {
         { label: "Register", path: "/register" },
       ];
     }
-
     if (user.role === "employer") {
       return [
         { label: "Home", path: "/" },
-        { label: "My Jobs", path: "/profile" },     // your Profile lists posted jobs
-        { label: "Post Job", path: "/post-job" },   // only employer should see this
+        { label: "My Jobs", path: "/profile" },
+        { label: "Post Job", path: "/post-job" },
       ];
     }
-
     // candidate
     return [
       { label: "Home", path: "/" },
       { label: "Browse Jobs", path: "/jobs" },
-      { label: "My Applications", path: "/profile" }, // your Profile shows applied jobs
+      { label: "My Applications", path: "/profile" },
     ];
   };
 
@@ -144,38 +143,41 @@ export default function PrimarySearchAppBar() {
       open={isMenuOpen}
       onClose={handleMenuClose}
     >
-      {user ? (
-        <>
-          <MenuItem
-            onClick={() => {
-              handleMenuClose();
-              navigate("/profile");
-            }}
-          >
-            Profile
-          </MenuItem>
-          <MenuItem onClick={handleLogout}>Logout</MenuItem>
-        </>
-      ) : (
-        <>
-          <MenuItem
-            onClick={() => {
-              handleMenuClose();
-              navigate("/login");
-            }}
-          >
-            Login
-          </MenuItem>
-          <MenuItem
-            onClick={() => {
-              handleMenuClose();
-              navigate("/register");
-            }}
-          >
-            Register
-          </MenuItem>
-        </>
-      )}
+      {user
+        ? [
+            <MenuItem
+              key="profile"
+              onClick={() => {
+                handleMenuClose();
+                navigate("/profile");
+              }}
+            >
+              Profile
+            </MenuItem>,
+            <MenuItem key="logout" onClick={handleLogout}>
+              Logout
+            </MenuItem>,
+          ]
+        : [
+            <MenuItem
+              key="login"
+              onClick={() => {
+                handleMenuClose();
+                navigate("/login");
+              }}
+            >
+              Login
+            </MenuItem>,
+            <MenuItem
+              key="register"
+              onClick={() => {
+                handleMenuClose();
+                navigate("/register");
+              }}
+            >
+              Register
+            </MenuItem>,
+          ]}
     </Menu>
   );
 
